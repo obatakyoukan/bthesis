@@ -1,0 +1,601 @@
+\chapter{提案手法}
+\label{ch:propose}
+
+提案する省メモリ化最大クリーク抽出アルゴリズムの概要について\ref{sec:alg-overview}節で述べる．
+次にその空間計算量について\ref{sec:alg-mem}節で述べる．
+最後にその時間計算量について\ref{sec:alg-time}節で述べる．
+
+
+\section{アルゴリズムの概要}
+\label{sec:alg-overview}
+MCSアルゴリズムでは，探索中のメモリ使用量のボトルネックは，探索の各段階で持つ候補点集合の情報のサイズである．
+したがって，たとえグラフを隣接リストなどで実装をしても，
+グラフとクリークのサイズが大きいとき，メモリ使用量が大きくなりやすい．
+
+提案するアルゴリズムでは，探索の各段階で持つ情報を，親から子に進むときに捨てる頂点集合のみにする．
+このことで，メモリの使用量を削減するようにする．
+%提案するアルゴリズムでは，探索の各段階で持つ情報を親から子に行くための差分の情報のみを保持することでメモリの使用量を削減するようにする．
+%差分の情報とは，子に渡さない頂点集合のことである．それは
+保持する情報には，
+頂点が選ばれクリークに追加された頂点集合と頂点を追加するときに隣接しなくなった頂点集合の2種類ある．
+それぞれの頂点集合を$V_\mathrm{d}$，$V_\mathrm{e}$とする．
+%それぞれの頂点集合を$fix1,fix2$とする．
+バックトラックするとき，その頂点集合を使用することで復元をする．
+%子から親に戻る際には，その差分の情報を使用することで復元をする．
+具体的な復元の仕方について，以下で説明する．
+$V$の順序は，手続きEXTEND-INITIAL-SORT-NUMBERを実行した以降変化しない．
+よって，適用後に頂点集合の先頭から1から頂点の番号を付け直して変える．
+このことによって，
+%や，
+%順番を保存しておくことで
+$V_\mathrm{d}$や$V_\mathrm{e}$を追加した後にソートすることで復元することができる．
+
+たとえば，図\ref{fig:simplegraph}のグラフで，頂点$1$をクリークに追加したとする．
+頂点$1$の隣接集合は，$\Gamma(1) = (2,4,5)$である．
+候補点集合は，$V$から頂点$1$に隣接していない頂点を削除する．
+したがって，$V' = V \cap \Gamma(1) = (2,4,5)$になりこれを子に渡す．
+そして，$ V_\mathrm{d} = V-V' = ( 1,3,6 )$を保存する．
+%そして，$ fix := V-V' = ( 1,3,6 )$を保存する．
+このようにすることで，再帰の各段階で子に進むときに捨てる頂点集合だけを保持させて，再帰を進めることができる．
+%復元するときには，まず子の頂点集合$V'$に自分が保存している子との差分の情報$fix$を追加する．
+%$V = V' \cup fix = ( 2,4,5,1,3,6)$となる．
+バックトラックするときの候補点集合を，復元する方法について説明する．
+まず，子の頂点集合$V'$に自分が保存している頂点集合$V_\mathrm{d}$を追加する．
+したがって，$V = V' \cup V_\mathrm{d} = ( 2,4,5,1,3,6)$となる．
+次に，ソートすることで$V=(1,2,3,4,5,6)$となり元の配列に復元することができる．
+提案アルゴリズムの動作を図\ref{fig:propose}
+に示す．
+提案アルゴリズムの擬似コードは，Algorithm \ref{alg:proposal}に示す．
+
+\begin{algorithm}[p]
+	\caption{提案アルゴリズム}
+%\scalebox{0.9}[0.9]{
+	\small
+	\label{alg:proposal}
+	\begin{algorithmic}[1]
+	\Procedure{ MCS-PROPOSAL }{$ G = ( V ,E ) $}
+		\State $Q:=\emptyset , Q_{max} := \emptyset$
+		%\State 拡張イニシャルソート
+		\State \Call{EXTEND-INITIAL-SORT-NUMBER}{ $ V , Q_{max} , \mathrm{No}$ }
+
+		%\State グラフの再構成
+		%\State 近似解アルゴリズムの適用
+		\State Apply approximation algorithm
+		\While{ $|Q| + |V| > |Q_{max}| $ }
+			\State $p:=$ the last vertex in $V$
+			\If{ $|Q| + \mathrm{No}[p] > |Q_{max} |$ }
+				%\State $V_s:= V \cap \Gamma(p)$
+				%\State \Call{EXPAND-PROPOSAL}{$V_s$}
+				\State \Call{EXPAND-PROPOSAL}{$V \cap \Gamma(p)$}
+			\Else \ \textbf{return} \ $Q_{max}$
+			\EndIf
+		\EndWhile
+		%\State \Return $Q_{max}$
+		\State \textbf{return} \ $Q_{max}$
+	\EndProcedure
+    \end{algorithmic}
+    
+
+	\begin{algorithmic}[1]
+		\Procedure{ EXPAND-PROPOSAL }{ $V_s$ }
+			\State $V_\mathrm{e} := \emptyset $ \Comment{一度クリークに追加された点を保存する}
+			%\State $fix1 := \emptyset $ \Comment{一度クリークに追加された点を保存する}
+			\While{ $V_s \neq \emptyset $}
+				%\State $p:=$ the last vertex in $R$
+				\State ${p,no} := $the last vertex and number in $R$ and $\mathrm{No}$ that get \Call{ NUMBER-SORT-R }{$ V_s ,R , \mathrm{No}$}
+				%\State ${p,no} := $\Call{ NUMBER-SORT-R }{$ V_s ,R , \mathrm{No}$}をした結果の$R$の一番後ろの頂点とその彩色番号
+				%\State $fix2 := \emptyset $ \Comment{隣接点でなく削除された点を保存する}
+				\If{ $|Q| + no > |Q_{max} | $ }
+					\State $ Q := Q \cup \{ p \}$
+					\State $ V_\mathrm{d} :=  V_s - \Gamma(p)$ \Comment{ 隣接していないために削除された点を保存する }
+					%\State $ fix2 :=  V - \Gamma(p)$ \Comment{ 隣接していないために削除された点を保存する }
+					\State $ V_s := V_s \cap \Gamma(p)$
+					\If{ $V_s \neq \emptyset $}
+						\State \Call{ EXPAND-PROPOSAL }{ $V_s$ }
+					\ElsIf{ $Q > Q_{max}$ }
+						\State $Q_{max} := Q$
+					\EndIf
+					%\State $V,fix2$を使い元の配列に戻す
+					%\State $V:=V-\{p \} , fix1 := fix1 \cup \{ p\}$
+					\State $ V_s := V_s \cup V_\mathrm{d}$，sort to $V_s$ \Comment{隣接していないため削除した頂点を復元する}
+					%\State $V_s$，$V_\mathrm{d}$を使い元の配列に戻す
+					\State $V_s:=V_s-\{p \} , V_\mathrm{e} := V_\mathrm{e} \cup \{ p\}$
+	    			\Else
+					\State $V_s:= V_s \cup V_\mathrm{e}$，sort to $V_s$ \Comment{バックトラックするので，探索した頂点を復元する}
+					%\State $V_s$，$V_\mathrm{e}$を使い元の配列に戻す
+					%\State $V,fix1$を使い元の配列に戻す
+					\State \textbf{ return }
+				\EndIf
+			\EndWhile
+			\State $V_s := V_s \cup V_\mathrm{e}$，sort to $V_s$ \Comment{バックトラックするので，探索した頂点を復元する}
+
+			%\State $V_s$，$V_\mathrm{e}$を使い元の配列に戻す
+			%\State $V,fix1$を使い元の配列に戻す
+		\EndProcedure
+		
+	\end{algorithmic}
+\end{algorithm}
+
+\begin{figure}[p]
+\begin{tabular}{cc}
+    \begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+    	\caption*{再帰適用前}
+	    %\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+	    \node[fill=black!20](s){};
+		%\node(s){};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		\node[ above =1mm of s , draw = white ](ss){$R$};
+		\node[ above left  =1mm of b , draw = white ](cc){};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+		\foreach \u / \v in{ss/cc}
+			\draw[->] (\u)--(\v);	
+    	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+	
+	    \begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+    	\caption*{再帰適用後		
+%\small{$V_{\mathrm{d}}:= R - \Gamma(p) $ }
+		}
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+    	%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	    \node(s){};
+		\node[below =of s](a){};
+		\node[fill=black!20,left=of a](b){};
+		\node[right =of a](c){};
+		\node[rectangle , above =1mm of s , draw = white ](ss){\small{$V_{\mathrm{d}} := R - \Gamma(p)$} };
+		\node[ above left=1mm of b , draw = white ](cc){ \small{$R':= R \cap \Gamma(p)$ } };
+		%\node[above left=1mm of b , draw = white ](cc){ \small{$R':= R-V_{ \mathrm{d} }$ } };
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+ \\ 
+		\\
+	\begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+    	\caption*{バックトラック適用前}
+	    %\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+		\node(s){};
+		\node[below =of s](a){};
+		\node[fill=black!20, left=of a](b){};
+		\node[right =of a](c){};
+		\node[ above =1mm of s , draw = white ](ss){ $V_{ \mathrm{d} }$ };
+		\node[ above left  =1mm of b , draw = white ](cc){ $R'$};
+		%\node[ above left  =1mm of b , draw = white ](cc){ $R'$};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+		\foreach \u / \v in{ss/cc}
+			\draw[<-] (\u)--(\v);	
+    	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+	
+	    \begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+	\caption*{バックトラック適用後
+       %\small{$R := R' \cup V_{\mathrm{d} }-\{p\}$} \\  \small{$ V_{\mathrm{e} }:= V_{\mathrm{e} } \cup \{p\} $ } 
+		}
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+    	%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	    \node[fill=black!20](s) {};
+	    %\node(s) {};
+	    %\node[label=above:\small{$R:=R'\cup V_{\mathrm{d}-\{p\} } \\ V_{\mathrm{e}}:=V_{\mathrm{e}} \cup \{p\}$}  ](s) {};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		%\node[above =1mm of s , draw = white ](ss){};
+		%\node[ rectangle,above =1mm of s , draw = white ](ss){ \small{$R := R' \cup V_{\mathrm{d} }-\{p\} $ \newline  $ V_{\mathrm{e} }:= V_{\mathrm{e} } \cup \{p\} $ } };
+		\node[ rectangle,above =1mm of s , draw = white ](ss){ \small{$ V_{\mathrm{e} }:= V_{\mathrm{e} } \cup \{p\} $ } };
+		\node[ rectangle,above =7mm of s , draw = white ](s2){ \small{$R := R' \cup V_{\mathrm{d} }-\{p\} $ } };
+		%\node[above left=1mm of b , draw = white ](cc){};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+
+
+\end{tabular}
+	  %  \begin{center}
+    %\caption{完全グラフ}
+    \caption{
+	提案手法の動作
+	    %$V_{\mathrm{d}}$は，各再帰で隣接していないので捨てる頂点集合とする．\\
+	    %$V_{\mathrm{e}}$は，各再帰の探索済みの頂点の集合とする．
+	    }
+    \label{fig:propose}
+	   \centering
+	    $R,R'$は，候補点集合とし，$p$は探索を行う頂点とする．
+	      $V_{\mathrm{d}}$は，各再帰で隣接していないので，子に持たせない頂点集合とする．
+	      $V_{\mathrm{e}}$は，各再帰の探索済みの頂点の集合とする．
+	   % \end{center}
+\end{figure}
+
+
+
+
+
+\begin{comment}
+\begin{algorithm}[p]
+	\caption{提案アルゴリズム}
+	\small
+	\label{alg:proposal}
+	\begin{algorithmic}[1]
+	\Procedure{ MCS-PROPOSAL }{$ G = ( V ,E ) $}
+		\State $Q:=\emptyset , Q_{max} := \emptyset$
+		%\State 拡張イニシャルソート
+		\State \Call{EXTEND-INITIAL-SORT-NUMBER}{ $ V , Q_{max} , No$ }
+		%\State グラフの再構成
+		%\State 近似解アルゴリズムの適用
+		\State Apply approximation algorithm
+		\State \Call{EXPAND-PROPOSAL}{$V$}
+		%\State \Return $Q_{max}$
+		\State \textbf{return} \ $Q_{max}$
+	\EndProcedure
+    \end{algorithmic}
+
+	\begin{algorithmic}[1]
+		\Procedure{ EXPAND-PROPOSAL }{ $V_s$ }
+			\State $ cutc:= |Q_{max}| -|Q|$
+			\State $V_\mathrm{e} := \emptyset $ \Comment{一度クリークに追加された点を保存する}
+			%\State $fix1 := \emptyset $ \Comment{一度クリークに追加された点を保存する}
+			\While{ $V_s \neq \emptyset $}
+				%\State $p:=$ the last vertex in $R$
+				\State ${p,no} := $\Call{ NUMBER-SORT-R }{$ V_s ,R , No,cutc$}をした結果の$R$の一番後ろの頂点とその彩色番号
+				%\State $fix2 := \emptyset $ \Comment{隣接点でなく削除された点を保存する}
+				\If{ $|Q| + no > |Q_{max} | $ }
+					\State $ Q := Q \cup \{ p \}$
+					\State $ V_\mathrm{d} :=  V_s - \Gamma(p)$ \Comment{ 隣接していないために削除された点を保存する }
+					%\State $ fix2 :=  V - \Gamma(p)$ \Comment{ 隣接していないために削除された点を保存する }
+					\State $ V_s := V_s \cap \Gamma(p)$
+					\If{ $V \neq \emptyset $}
+						\State \Call{ EXPAMD-proposal }{ $V_s$ }
+					\ElsIf{ $Q > Q_{max}$ }
+						\State $Q_{max} := Q$
+					\EndIf
+					%\State $V,fix2$を使い元の配列に戻す
+					%\State $V:=V-\{p \} , fix1 := fix1 \cup \{ p\}$
+					\State $V_s$，$V_\mathrm{d}$を使い元の配列に戻す
+					\State $V_s:=V_s-\{p \} , V_\mathrm{e} := V_\mathrm{e} \cup \{ p\}$
+	    			\Else
+					\State $V_s$，$V_\mathrm{e}$を使い元の配列に戻す
+					%\State $V,fix1$を使い元の配列に戻す
+					\State \textbf{ return }
+				\EndIf
+			\EndWhile
+			\State $V_s$，$V_\mathrm{e}$を使い元の配列に戻す
+			%\State $V,fix1$を使い元の配列に戻す
+		\EndProcedure
+		
+	\end{algorithmic}
+\end{algorithm}
+\end{comment}
+
+\begin{comment}
+\begin{figure}[p]
+\begin{tabular}{ccc}
+    \begin{minipage}[b]{0.33\hsize}
+	    \begin{center}
+    	\caption*{適用前}
+	    %\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+		\node(s){};
+		\node[above =3mm of s , draw = white ](ss){$R$};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		\node[above left=1mm of b , draw = white ](cc){};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+		\foreach \u / \v in{ss/cc}
+			\draw[->] (\u)--(\v);	
+    	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+		
+	\begin{minipage}[b]{0.33\hsize}
+	    \begin{center}
+    	\caption*{MCS再帰適用後}
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+    	%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	    \node(s){};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		\node[above =1mm of s , draw = white ](ss){\small{$R$}};
+		\node[above left=1mm of b , draw = white ](cc){\small{$R\cap \Gamma(p)$}};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+
+
+
+	    \begin{minipage}[b]{0.33\hsize}
+	    \begin{center}
+    	\caption*{提案手法再帰適用後}
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+    	%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	    \node(s){};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		\node[above =1mm of s , draw = white ](ss){\small{$R-\Gamma(p)$}};
+		\node[above left=1mm of b , draw = white ](cc){\small{$R\cap \Gamma(p)$}};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+
+\end{tabular}
+    %\caption{完全グラフ}
+    \caption{子に進む動作}
+    \label{fig:child}
+	
+\end{figure}
+
+\begin{figure}[p]
+\begin{tabular}{cc}
+    \begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+    	\caption*{バックトラック適用前}
+	    %\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+		\node(s){};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		\node[ above =1mm of s , draw = white ](ss){\small{$R-\Gamma(p)$} };
+		\node[ above left  =1mm of b , draw = white ](cc){\small{$R\cap \Gamma(p)$}};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+		\foreach \u / \v in{ss/cc}
+			\draw[<-] (\u)--(\v);	
+    	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+	
+	    \begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+    	\caption*{バックトラック適用後}
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+    	%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	    \node(s){};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		\node[above =3mm of s , draw = white ](ss){$R$};
+		%\node[above =3mm of b , draw = white ](cc){};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+
+\end{tabular}
+    %\caption{完全グラフ}
+    \caption{提案手法でのバックトラック動作}
+    \label{fig:child}
+	
+\end{figure}
+
+\begin{figure}[p]
+\begin{tabular}{cc}
+    \begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+    	\caption*{再帰適用前}
+	    %\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+		\node(s){};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		\node[ above =1mm of s , draw = white ](ss){$R$};
+		\node[ above left  =1mm of b , draw = white ](cc){};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+		\foreach \u / \v in{ss/cc}
+			\draw[->] (\u)--(\v);	
+    	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+	
+	    \begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+    	\caption*{再帰適用後		
+%\small{$V_{\mathrm{d}}:= R - \Gamma(p) $ }
+		}
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+    	%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	    \node(s){};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		\node[rectangle , above =1mm of s , draw = white ](ss){\small{$V_{\mathrm{d}} := R - \Gamma(p)$} };
+		\node[above left=1mm of b , draw = white ](cc){ \small{$R':= R-V_{ \mathrm{d} }$ } };
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+ \\ 
+		\\
+	\begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+    	\caption*{バックトラック適用前}
+	    %\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+		\node(s){};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		\node[ above =1mm of s , draw = white ](ss){ $V_{ \mathrm{d} }$ };
+		\node[ above left  =1mm of b , draw = white ](cc){ $R'$};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+		\foreach \u / \v in{ss/cc}
+			\draw[<-] (\u)--(\v);	
+    	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+	
+	    \begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+	\caption*{バックトラック適用後
+       %\small{$R := R' \cup V_{\mathrm{d} }-\{p\}$} \\  \small{$ V_{\mathrm{e} }:= V_{\mathrm{e} } \cup \{p\} $ } 
+		}
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+    	%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	    \node(s) {};
+	    %\node[label=above:\small{$R:=R'\cup V_{\mathrm{d}-\{p\} } \\ V_{\mathrm{e}}:=V_{\mathrm{e}} \cup \{p\}$}  ](s) {};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		%\node[above =1mm of s , draw = white ](ss){};
+		%\node[ rectangle,above =1mm of s , draw = white ](ss){ \small{$R := R' \cup V_{\mathrm{d} }-\{p\} $ \newline  $ V_{\mathrm{e} }:= V_{\mathrm{e} } \cup \{p\} $ } };
+		\node[ rectangle,above =1mm of s , draw = white ](ss){ \small{$ V_{\mathrm{e} }:= V_{\mathrm{e} } \cup \{p\} $ } };
+		\node[ rectangle,above =7mm of s , draw = white ](s2){ \small{$R := R' \cup V_{\mathrm{d} }-\{p\} $ } };
+		%\node[above left=1mm of b , draw = white ](cc){};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+
+
+\end{tabular}
+    %\caption{完全グラフ}
+    \caption{提案手法の動作\\
+	    }
+    \label{fig:child}
+	
+\end{figure}
+
+
+
+\end{comment}
+
+
+
+\section{アルゴリズムの空間計算量}
+\label{sec:alg-mem}
+%提案アルゴリズムの空間計算量は，探索木の頂点は子との差分の情報のみ保持するので探索木の根から自分までの各段階の合計で$O(n)$のメモリを使用する．
+
+%グラフ$G=(V,E)$に対して，$n$と$m$を$n = |V|$，$m = |E|$とする．
+提案アルゴリズムの空間計算量に対して，以下のことがいえる．
+\begin{theorem}[提案アルゴリズムの探索中の空間計算量]
+    \label{theorem:propose_mem}
+    提案アルゴリズム探索中に使用する空間計算量は，$O(n)$ である.
+\end{theorem}
+\begin{Proof*}{}
+  %  探索木の各頂点は子との差分の情報のみ保持しているので
+    EXPAND-PROPOSALでは，保持する主なデータは，$V_\mathrm{e}$，$V_\mathrm{d}$である．
+   これは子との差分の情報なので，
+    探索木の根からどの探索の段階までの合計もグラフの頂点集合のサイズを超えない．
+    したがって，探索中に使用するの空間計算量は，$O(n)$となる．
+\qed
+\end{Proof*}
+\begin{theorem}[提案アルゴリズムの隣接行列の空間計算量]
+    提案アルゴリズムの隣接行列の空間計算量は，$O(n^2)$である．
+\end{theorem}
+
+\begin{Proof*}{}
+    提案アルゴリズムの探索中に使用する空間計算量は，定理\ref{theorem:propose_mem}から$O(n)$である．
+    \ref{sec:neighbormatrix}で述べたようにグラフの隣接行列の空間計算量は，$O(n^2)$である．
+    グラフの隣接行列での提案アルゴリズムの空間計算量は，
+    \begin{equation}
+	O( n ) + O( n^2 ) = O(n^2 )
+    \notag
+    \end{equation}
+    となる．
+\qed
+\end{Proof*}
+
+
+\begin{theorem}[提案アルゴリズムの隣接リストの空間計算量]
+    提案アルゴリズムの隣接リストでの空間計算量は，$O(n + m )$である．
+\end{theorem}
+
+\begin{Proof*}{}
+    提案アルゴリズムの探索中に使用する空間計算量は，定理\ref{theorem:propose_mem}から$O(n)$である．
+    %グラフの隣接行列の空間計算量は$O(n^2)$，
+    \ref{sec:neighborlist}で述べたようにグラフの隣接リストの空間計算量は，$O(n + m )$である．
+    %グラフの隣接行列での提案アルゴリズムの空間計算量は，
+    %\begin{equation}
+%	O( n ) + O( n^2 ) = O(n^2 )
+ %   \end{equation}
+  %  となる．\\
+    グラフの隣接リストでの提案アルゴリズムの空間計算量は，
+    \begin{equation}
+    O( n ) + O( n + m ) = O( n + n + m) = O(n + m )
+    \notag
+    \end{equation}
+    となる．
+\qed
+\end{Proof*}
+
+\section{アルゴリズムの時間計算量}
+\label{sec:alg-time}
+%従来のMCSアルゴリズムでは，各段階で彩色アルゴリズムNUMBER-SORT-Rを一度だけ行うが，
+%提案手法では，自分の子の数だけ行われる．
+%これは，かなり悪化するように考えられそうだが，子が自分に来るためにNUMBER-SORT-Rを行われるとみれば行われるのは一度だけで，
+%各段階での時間計算量は，自分に対するNUMBER-SORT-Rする時間計算量から親のNUMBER-SORT-Rする時間計算量の差と差分の情報からの復元が従来のアルゴリズムより増えていると考えられる．
+%グラフ$G=(V,E)$で$n = |V|$，$m = |E|$とする．
+%グラフ$G=(V,E)$に対して，$n$と$m$を$n = |V|$，$m = |E|$とする．
+提案アルゴリズムの空間計算量に対して，以下のことがいえる．
+提案アルゴリズムの分枝数は，指数的に増加する可能性がある．
+したがって，全体の時間計算量は，指数時間である．
+提案アルゴリズムの分枝の処理EXPAND-PROPOSALの時間計算量についても解析をする．
+
+\begin{theorem}[EXPAND-PROPOSALの時間計算量]
+    EXPAND-PROPOSALの時間計算量は隣接行列では，$O(n^4)$時間で，
+    隣接リストでは，$O(n^4 \log n )$時間である．
+\end{theorem}
+
+\begin{Proof*}
+    Algorithm \ref{alg:proposal}のEXPAND-PROPOSALの5--19行のEXPAND-PROPOSALを以外の処理と3--20行以外の処理は$O(n\log n)$で全て行うことができる．
+    3--20行のループで最も時間がかかる処理は，4行目の処理である．
+    ループの回数は，最大で$n$回行う．
+    したがって，EXPAND-PROPOSALの時間計算量は隣接行列では，$O(n^4)$時間で，隣接リストでは，$O(n^4\log n )$である．
+\end{Proof*}
+
+\begin{comment}
+\begin{theorem}
+    EXPAND-PROPOSALの時間計算量は，$O(n^3)$である．
+    EXPAND-PROPOSALのを受け渡した親の部分グラフのサイズを$n_p$とすると，平均時間計算量は，$O(n_p^2)$である．
+\end{theorem}
+\begin{Proof*}
+    NUMBER-SORT-Rの時間計算量は，$O(n^2)$である．
+    EXPAND-PROPOSALのAlgorithm\ref{alg:proposal}の3--19行目までの処理で再帰のEXPAND-PROPOSALとNUMBER-SORT-R以外は，$O(n\log n)$で行える．
+    EXPAND-PROPOSALアルゴリズムで最も時間がかかるステップは，NUMBER-SORT-Rである．
+    これを最大で$n$回繰り返される．
+    したがって，EXPAND-PROPOSALアルゴリズムの時間計算量は，$O(n^3)$である．
+    %NUMBER-SORT-Rは，EXPANDに対して一度しか行われない，
+    各EXPANDに対して，NUMBER-SORT-Rは部分問題の子の数と分枝限定の条件で停止する1回分だけ行われる．
+    NUMBER-SORT-Rは，各EXPAND-PROPOSALの先頭処理として部分グラフを彩色していると見れる．
+    EXPAND-PROPOSALに対して，親サイズのNUMBER-SORT-Rと分枝限定の条件を確認するための2回行われると考えられる．
+    ただし，NUMBER-SORT-Rは親のサイズで行われているのでEXPAND-PROPOSALアルゴリズムの平均時間計算量は$O(n_p^2)$である．
+
+\end{Proof*}
+\end{comment}
+
+\begin{comment}
+%平均的にみると自分の部分グラフのサイズと親の部分グラフのサイズの差の分だけ時間計算量が悪化する．
+時間計算量をみるとMCSのEXPANDに比べてかなり悪化しているようにみえるが，
+EXPAND-PROPOSALでのNUMBER-SORT-Rは，子に進むためと分枝条件で止まるのためにしか行われない．
+このため，NUMBER-SORT-Rは最大でも全体で分枝数の2倍の回数しか行われない．
+MCSではNUMBER-SORT-Rは分枝数と同じ回数行うので，提案手法はMCSに対して大きく悪化することはないと考える.
+
+\end{comment}
+

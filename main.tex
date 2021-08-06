@@ -1,0 +1,120 @@
+%\documentclass[a4paper,uplatex]{jsarticle,jsotsuron}
+\documentclass[12pt , twoside]{jsotsuron}
+\usepackage{newtxtext}
+\usepackage{textcomp}
+\usepackage[sc]{mathpazo}
+\usepackage{amsmath,amssymb,arydshln, amsthm}
+\usepackage[scaled]{helvet}
+\usepackage{otf}
+\usepackage[dvipdfmx]{graphicx,xcolor}
+\usepackage{tikz}
+\usepackage[framemethod=tikz]{mdframed}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{verbatim}
+\usepackage{ascmac}
+%\usepackage{algorithm, algorithmic}
+\usepackage{listings,jlisting}
+\usepackage{bm}
+
+\usepackage{algorithm, algpseudocode}
+
+\usepackage{color}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usepackage{longtable}
+\usepackage{comment}
+\usepackage{multirow}
+\usepackage{url}
+
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{quotes}
+\usetikzlibrary{shapes}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{fit}
+
+\lstset{%
+	language={C},
+	basicstyle={\small},%
+	identifierstyle={\small},%
+	commentstyle={\small\itshape},%
+	keywordstyle={\small\bfseries},%
+	ndkeywordstyle={\small},%
+	stringstyle={\small\ttfamily},
+	frame={tb},
+	breaklines=true,
+	columns=[l]{fullflexible},%
+	numbers=left,%
+	xrightmargin=0zw,%
+	xleftmargin=3zw,%
+	numberstyle={\scriptsize},%
+	stepnumber=1,
+	numbersep=1zw,%
+	lineskip=-0.5ex%
+}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{定理}
+\newtheorem*{theorem*}{定理}
+\newtheorem{definition}[theorem]{定義}
+\newtheorem*{definition*}{定義}
+\newtheorem{lemma}[theorem]{補題}
+\newtheorem*{lemma*}{補題}
+\newtheorem{Proof}{証明}
+\newtheorem*{Proof*}{証明}
+
+\newcommand{\argmax}{\mathop{\rm arg~max}\limits}
+\newcommand{\argmin}{\mathop{\rm arg~min}\limits}
+% RequireとEnsureをInputとOutputにする
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\title{ 最大クリーク発見に関する省メモリアルゴリズム\\
+ A Space Efficient Algorithm\\ for Finding A Maximum Clique}
+\author{小畠 教寛\\ Norihiro Obata}
+
+\date{令和2年2月}
+
+\begin{document}
+\maketitle
+%$ $
+%\newpage
+
+\begin{abstract}
+%アブストラクトを書く．
+無向グラフから最大クリークを１つ発見する問題は，NP困難に属する組み合わせ最適化問題である．
+現実の様々な問題が，最大クリーク抽出やそれに類する問題として，モデル化できることから，
+最大クリーク問題は，工学的に重要な問題となっている．
+%最大クリーク抽出の効率の良いアルゴリズムが提案されている.
+最大クリーク抽出のアルゴリズムとして，彩色による分枝限定法を用いた高速なアルゴリズムが，
+Tomitaらによって提案されている．
+%
+このアルゴリズムは，省メモリ化に対しては，多く研究されていない．
+%最大クリークを発見するアルゴリズムは，高速化する研究は古くから研究されているが，省メモリ化についてはあまり研究をされていない．
+%
+本論文では，最大クリークが巨大なグラフに対しても実用上で，解を得られるように
+最大クリークを発見する省メモリで動作するアルゴリズムを提案する．
+%最大クリーク抽出の省メモリアルゴリズムに対する提案をする．
+実験において，提案アルゴリズムは，最大クリークのサイズが，
+大きなグラフに対して，最大メモリ使用量が1MBから7MB程度に減少することが確認された．
+
+\end{abstract}
+\newpage
+\tableofcontents
+\newpage
+
+%%%%%%%%論文本体%%%%%%%%
+\input{./chapter/intro.tex}
+\input{./chapter/prelm.tex}
+\input{./chapter/exist.tex}
+\input{./chapter/propose.tex}
+\input{./chapter/ex.tex}
+\input{./chapter/cncls.tex}
+\input{./chapter/others.tex}
+
+%%%%%%%%%%%%%%%%%%%% 参考文献 %%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{junsrt}
+\bibliography{ref}
+
+\end{document}

@@ -1,0 +1,911 @@
+\chapter{既存手法}
+\label{ch:prelm}
+
+%富田らによってMCQ\cite{tomita2003efficient}，MCR\cite{tomita2007efficient}，MCS\cite{tomita2010simple}\cite{tomita2013simple}，MCT\cite{tomita2016much}などいくつかの高速な最大クリーク抽出アルゴリズムが提案されている．
+%これらのアルゴリズムは近似彩色による分枝限定法によって高速化されている．
+%この章では，MCQ，MCR，MCS，MCTに共通しているアイデアについての説明をする．
+%その後，本論文で提案するアルゴリズムの基になっているMCSアルゴリズムについての具体的な説明を行う．
+%\section{最大クリーク抽出アルゴリズム}
+%富田らによってMCQ\cite{tomita2003efficient}，MCR\cite{tomita2007efficient}，MCS\cite{tomita2010simple}\cite{tomita2013simple}，MCT\cite{tomita2016much}などいくつかの高速な最大クリーク抽出アルゴリズムが提案されている．
+%これらのアルゴリズムは近似彩色による分枝限定法によって高速化されている．
+この章では， 
+%Tomitaらによって提案された
+%MCQと，MCR，MCS，MCTで共通して用いられている基本アイデアの深さ優先探索を\ref{sec:naive}節でナイーブアルゴリズムとして紹介する．
+既存手法で用いられている深さ優先探索に基づく最大クリーク発見のアルゴリズムの説明を行う．
+\ref{sec:naive}節では，厳密解を発見するナイーブアルゴリズムを与える．
+\ref{sec:BB}節では，アルゴリズムを高速に動かすための改善方法について説明する．
+%工夫に使われる近似彩色の基本的方法についても紹介する．
+\ref{sec:MCS}節では，本論文で提案するアルゴリズムの基になっているMCSアルゴリズム\cite{tomita2010simple}\cite{tomita2013simple}について，
+具体的な説明を行う．
+%\subsection{ナイーブアルゴリズム}
+\section{ナイーブアルゴリズム}
+\label{sec:naive}
+%\subsection{基本アルゴリズム}
+%基本アルゴリズムとしては，ある時点で保持しているクリーク$Q$に，そのクリーク中の全ての頂点と隣接している頂点（この集合$R$を候補点集合とする）を１つ選び，
+このナイーブアルゴリズムは，深さ優先探索に基づき最大クリークを求める．
+ナイーブアルゴリズムの擬似コードを，Algorithm\ref{alg:BasicAlgorithm}に示す．
+ある時点で保持しているクリークを$Q$，その$Q$の全ての頂点と隣接している頂点の集合を候補点集合$R$とする．
+%その頂点をクリークに付け加える操作を深さ優先探索によって進めていくという手順をとる．
+%このような操作を再帰的に繰り返すていくことで，候補点集合が空になったときグラフ中の極大クリークが得られる．
+以下に動作を説明する．
+まず，$R$の中から頂点を１つ選び$R$から取り除く．その頂点を$p$とする．$p$を$Q$に加え，$R_p$を$R$と$p$の隣接集合の積集合とする．
+$R_p$を$R$としてこの操作を繰り返し行っていく．
+$R$が空になったときグラフの極大クリークが得られる．
+%$R$の中から頂点を１つ選びクリークに付け加える操作を行う．この操作を繰り返し行っていき，候補点集合$R$が空になったときグラフの極大クリークが得られる．
+このとき得られた極大クリークのサイズが，見つかった極大クリークの中で最大のとき，それを最大クリークの候補$Q_{max}$にする．
+%深さ優先探索の基本に従い，
+$R$が空になった後は%１つ前の再帰処理に戻り
+バックトラックをし，$Q$から$p$を削除する．
+その後は，
+別の頂点を選んで探索を続ける．
+全ての探索が終了したときに保持している最大クリークの候補が，そのグラフの最大クリークとなる．
+
+クリーク探索の全過程は，全頂点集合$V$を根，各時点での候補点集合$R$を頂点として，各候補点集合についての親子関係にあるものを枝で結んだ探索木として表現できる．
+この探索木における枝を分枝，その総数を分枝数と呼ぶ．
+
+\begin{algorithm}[p]
+  \caption{最大クリーク抽出のナイーブアルゴリズム}
+  \label{alg:BasicAlgorithm}
+    \begin{algorithmic}[1]
+	%\Procedure{Mc-Naive}{$G=(V,E)$}
+	\Procedure{MC-NAIVE}{$G=(V,E)$}
+    		\State $Q := Q_{max} := \emptyset $
+		%\State \Call{Expand-Naive}{$V$}
+		\State \Call{EXPAND-NAIVE}{$V$}
+		\State \textbf{return} 	$Q_{max}$
+	\EndProcedure
+    \end{algorithmic}
+    \begin{algorithmic}[1]
+    %\Require $G = (V,E)$
+    %\Ensure $Q_{max}$
+    %\State $Q := Q_{max} := \emptyset $
+	 
+         \Procedure{EXPAND-NAIVE}{$R$}
+         %\Procedure{Expand-Naive}{$R$}
+	 	\While{ $R \neq \emptyset$ }
+	 		%\State 頂点$p \in V$を１つ選ぶ
+			\State $p :=$ a vertex in $R$
+			\State $R := R - \{ p \} $
+			\State $Q := Q \cup \{ p \} $
+			\State $R_p := R \cap \{ p \} $
+			\If{ $R_p \neq \emptyset$}
+				\State \Call{EXPAND-NAIVE}{ $R_p$ }
+				%\State \Call{Expand-Naive}{ $R_p$ }
+			\ElsIf{ $Q > Q_{max}$ }
+				\State $ Q_{max} := Q $
+			\EndIf
+			\State $Q := Q - \{ p \}$
+		\EndWhile
+	\EndProcedure
+    \end{algorithmic} 
+\end{algorithm}
+
+\section{近似彩色による分枝限定}
+\label{sec:BB}
+%\subsection{近似彩色による分枝限定}
+MCQ\cite{tomita2003efficient}と，MCR\cite{tomita2007efficient}，MCS，MCT\cite{tomita2016much}などのアルゴリズムでは，近似彩色による分枝限定法によって
+分枝数を抑えることで
+高速化されている．
+%これは，分枝数を抑えることで探索をより効率的に行っている．
+
+\subsection{分枝限定法}
+%\subsubsection*{分枝限定法}
+アルゴリズムを高速化するためには，探索過程での分枝数を削減することが効果的である．
+これを実現することが分枝限定法である．
+%最大クリーク抽出の分枝限定法の一つは，
+
+探索時に保持しているクリークを$Q$，最大クリーク候補を$Q_{max}$，候補点集合を$R$とする．
+このとき，
+\begin{equation}
+	|Q| + |R| \leq |Q_{max}|
+\notag
+\end{equation}
+を満たすとき，最大クリークが存在しないことは，明らかであるので探索を終了する．
+
+
+%\subsection{近似彩色}
+分枝限定をより効果的に適用するために彩色を利用する．
+彩色とは，グラフの隣接頂点同士には異なる番号になるように番号を振ることである．
+彩色の目的は，最大クリークのサイズの上界をできるだけ小さく求めることである．
+%で分枝限定をより効果的にすることである．
+%近似彩色の目的は，最大クリークサイズの上界をできるだけ小さく求めることで分枝限定をより効果的にすることである．
+%彩色条件は，隣接する頂点同士には異なる番号で彩色することである．
+
+\begin{lemma}[彩色による最大クリークのサイズの上界]
+    グラフが隣接頂点同士には異なる番号になるように番号を振られ，彩色に使われている最大の番号を$k_{max}$とする．
+    このとき，最大クリークのサイズは$k_{max}$以下になる．
+    %このとき，グラフには$k_{max}$のサイズを超えるようなクリークは存在しない．
+\end{lemma}
+\begin{Proof*}
+    グラフが彩色されときの彩色に使われた最大の番号を$k_{max}$のとき，
+    最大クリークのサイズを$\omega $とする．
+    %補題1が成り立たないと仮定する．次の式が成り立つ．
+    %\begin{equation}
+%	w > k_{max}
+ %   \end{equation}
+    クリークの任意の2頂点は隣り合っている．
+    なので，彩色を行われると，必ずクリーク中にはクリークのサイズ以上の彩色番号$k$の頂点が存在する．
+    よって，次の式が成り立つ．
+    %\begin{equation}
+	$ \omega \leq k \leq  k_{max}$
+	%\notag
+    %\end{equation}
+   % \qed
+  %  よって，矛盾する．
+   
+\end{Proof*}
+頂点$p$の彩色番号を$\mathrm{No}[p]$とする．
+補題1より，彩色番号の大きな頂点$p$から探索すれば，分枝限定の条件を次の式にすることができる．
+\begin{equation}
+	|Q| + \mathrm{No}[p] \leq | Q_{max} | 
+	\notag
+\end{equation}
+EXPAND毎に近似彩色アルゴリズムを適用すると，
+%彩色番号が大きな頂点から探索を行うことで
+	上記の式を分枝条限定の条件を使うことができるので効率よく探索を終了することができる．
+
+\subsection{近似彩色}
+彩色の最適化は，NP困難に属する組合せ最適化問題であるので，近似彩色を行う
+%\cite{Karp1972}
+．
+%以下には，
+%具体的な彩色方法について述べる．
+MCQとMCRで用いられている具体的な彩色方法について述べる．
+彩色は，候補点集合の先頭から行い，各頂点には，隣接する頂点の頂点が持つ番号とは異なる最小の正整数を付与する．
+このように，彩色を行いその番号の昇順に並べる手続きがNUMBER-SORTである．
+擬似コードを，Algorithm \ref{alg:NUMBER-SORT}に示す．
+$C_k$には，彩色番号$k$を持つ頂点が保存されている．
+\begin{algorithm}[p]
+    \caption{彩色アルゴリズム}
+    \label{alg:NUMBER-SORT}
+
+    \begin{algorithmic}[1]
+	\Procedure{NUMBER-SORT}{ $R,\mathrm{No}$ }
+		\State $maxno:=0 , C_1 := \emptyset$
+		\While{ $R \neq \emptyset$ }
+			\State $p:=$ the first vertex in $R$
+			\State $k:=1$
+			\While{ $C_k \cap \Gamma(p) \neq \emptyset $}
+				\State $k:=k+1$
+			\EndWhile
+			\If{ $ k > maxno $ }
+				\State $ maxno := k , C_{maxno} := \emptyset$
+			\EndIf
+			\State $\mathrm{No}[p] := k , C_k := C_k \cup \{p \} , R := R - \{ p \}$
+		\EndWhile
+		\State $i:=1$
+		\For{ $k:=1$ \ \textbf{to} \ $maxno$}
+			\For{ $j:=1$ \ \textbf{to} \ $|C_k|$ }
+				\State $R[i] := C_k[j] , i := i+1 $
+			\EndFor
+		\EndFor
+	\EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+
+%\subsubsection*{グラフの再構成}
+%	キャッシュ率を上げるためにグラフの再構成を行う．
+
+\section{MCSアルゴリズム}
+\label{sec:MCS}
+%\subsection{MCSアルゴリズム}
+%具体的な何かを盛り込んだのかを言う
+%以下の点を踏まえたのがMCSアルゴリズムである．
+MCSアルゴリズムは，
+\ref{sec:naive}節のナイーブアルゴリズムを基づき，後述するNUMBER-SORT-Rを彩色アルゴリズムとするアルゴリズムである．
+MCSの擬似コードを，Algorithm \ref{alg:MCS_alg}に示す．
+その具体的な方法について，以下で述べる．
+さらに，近似解の適用によるMCSアルゴリズムの高速化についても述べる．
+%MCSの擬似コードを，Algorithm \ref{alg:MCS_alg}に示す．
+この節の最後には，MCSの空間計算量と時間計算量についての解析を行う．
+
+
+\subsection{整列順序}
+最大クリーク抽出アルゴリズムの高速化において，入力で与えられたグラフにおける初期の頂点の整列順序は重要である
+\cite{富田悦次1985最大クリーク抽出の効率化手法とその実験的評価}
+%\cite{}
+．
+%\cite{須谷洋一2006最大クリーク抽出のより高速な分枝限定アルゴリズム}．
+%そのため，探索の前処理にEXTEND INITIAL SORT NUMBERを行う.
+%中身をどう描くか
+
+探索は頂点の次数の小さいものから，彩色は次数が大きなものから行うのが効率の良いかとが実験的に示されている
+\cite{tomita2007efficient}
+\cite{富田悦次1985最大クリーク抽出の効率化手法とその実験的評価}
+．%参考文献
+また，探索木の根に近い部分では，グラフに存在する最大クリークサイズと彩色番号の最大値の差が大きくなる傾向があるため彩色精度の向上による効率化が難しい．
+このような場合は，次数の小さい頂点から順に探索することによる効率化を行なった方が有効な場合がある．
+したがって，根の問題に限り最小次数を優先して探索することにより効率化を達成する．
+最小次数の頂点が複数ある場合は，その頂点集合を$R_{min}$とし，
+$ex$-$deg (p) := 
+\sum_{ r \in ( R_{min} \cap \Gamma(p) ) }  deg(r) $の値が小さい順に探索を行う． 
+以上のことに即した頂点の整列を探索の前処理として，初期頂点整列アルゴリズムEXTEND-INITIAL-SORT-NUMBERを行う．
+EXTEND-INITIAL-SORT-NUMBERの擬似コードを，Algorithm \ref{alg:EXTEND-SORT}に示す．
+
+\begin{algorithm}[htbp]
+    \caption{初期頂点整列アルゴリズム}
+    \label{alg:EXTEND-SORT}
+    \small
+    \begin{algorithmic}[1]
+	\Procedure{EXTEND-INITIAL-SORT-NUMBER}{ $V,Q_{max} , \mathrm{No}$ }
+		\State $i:=|V|$ \Comment{後ろから追加していく}
+		\State $R:=V,V:=\emptyset$
+		\State $R_{min}:=$ set of vertices with the minimum degree in $R$
+		\While{ $| R_{min} | \neq |R| $}
+			\If{ $|R_{min}| \geq 2 $}
+				%\State $p:=$a vertex in $R_{min}$ such that $\sum_{r \in ( R_{min} \cap \Gamma(p) )}deg(r) = \min \{ \sum_{r \in ( R_{min} \cap \Gamma(q)  )}deg(r) \mid q \in R_{min} \}$
+				\State $p:=$a vertex in $R_{min}$ such that $ex$-$deg(p) = \min \{ ex$-$deg(q) \mid q \in R_{min} \}$
+			\Else \  $p := R_{min}[1]$
+			\EndIf
+			\State $V[i] := p , R := R - \{ p \} , i := i-1$
+			\For{$j:=1$ \ \textbf{to} \ $|R|$ } \Comment{次数を直す}
+				\If{ $R[j]$ is adjacent to $p$}
+					\State $deg(R[j]) := deg( R[j] ) - 1 $
+				\EndIf
+			\EndFor
+			\State $R_{min} := $set of vertices with the minimum degree in $R$
+		\EndWhile
+		\State \Call{ NUMBER-SORT }{ $R_{min} , \mathrm{No} $ }
+		\For{ $i := 1$ \ \textbf{to} \ $|R_{min}| $ } \Comment{残りの要素を追加していく}
+			\State $V[i] := R_{min}[i]$
+		\EndFor
+		\State $m := \max\{ \mathrm{No}[q] \mid q \in R_{min} \} $
+		\If{ $m = R_{min} $ }
+			\State $Q_{max} := R_{min}$
+		\EndIf
+		\State $m := m+1 , i:= |R_{min}| + 1$ \Comment{$|R_{min}|+1 \leq i \leq |V|$の範囲を彩色する}
+		\While{ $i \leq |V| $\ \textbf{and}\ $ m \leq |V| $ }
+			\State $\mathrm{No}[V[i]] := m , m:=m+1,i:=i+1$
+		\EndWhile
+		\While{ $ i \leq |V|$ }
+			\State $\mathrm{No}[V[i]] := m ,i:=i+1$
+		\EndWhile
+	\EndProcedure
+    \end{algorithmic}
+
+\end{algorithm}
+
+
+\subsection{再彩色アルゴリズムRE-COLOR}
+%\subsubsection*{再彩色アルゴリズムRE-COLOR}
+$\mathrm{No}[p] \leq | Q_{max} | - |Q| (=: cutc )$となる頂点は探索不要であるので，
+この条件を満たす頂点を多くするような頂点の彩色を行いたい．
+このような考えに基づき提唱されたのが，再彩色アルゴリズムRE-COLORである．
+頂点$p$の彩色番号が$k$として，RE-COLORは以下の手順で行う．
+%$1\leq k_1 < cutc$の範囲で，$ |\Gamma( p ) \cap C_{k_1}| = 1 $のとき，$ \{q\} = \Gamma(p) \cap C_{k_1} $として，\\
+%$k_1 < k_2 < cutc $で $| \Gamma( q ) \cap C_{k_2} | = 0 $を満たすなら，\\
+%頂点$p$の彩色番号を$k_1$，頂点$q$の彩色番号を$k_2$に変える．
+\begin{enumerate}
+    \item $1\leq k_1 < cutc$の範囲で，$ |\Gamma( p ) \cap C_{k_1}| = 1 $を満たす$k_1$を探す．
+    \item $\Gamma(p) \cap C_{k_1} $の頂点を$q$とする．
+    \item $k_1 < k_2 < cutc $の範囲で，$| \Gamma( q ) \cap C_{k_2} | = 0 $を満たす$k_2$を探す．
+    \item 頂点$p$の彩色番号を$k_1$，$q$の彩色番号を$k_2$に変える．
+\end{enumerate}
+
+RE-COLORの動作例を図\ref{fig:RE-NUMBER}に示す．
+RE-COLORの擬似コードを，Algorithm \ref{alg:Re_Color}に示す．
+\begin{figure}[p]
+\begin{tabular}{ccc}
+%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white}]
+    \begin{minipage}[b]{0.3\hsize}
+	\begin{center}
+	\caption*{適用前}
+	\scalebox{0.7}{
+    \begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+		\node(s){$p$};
+		\node[right =of s](a){$q$};
+		\node[ above left =of s](b){};
+		\node[ left = of s ](c){};
+	    	\node[ below left =of s](d){};
+	    	\node[ above right=of a](e){};
+	    	\node[ right =of a](f){};
+	    	\node[ below right=of a](g){};
+		
+		\begin{scope}[on background layer]
+		    \node[ fit= (b) (c) (d) ,ellipse, draw=black!40 ,dashed, fill = black!10   ](h){};
+		\end{scope}
+		\begin{scope}[on background layer]
+		    \node[ fit= (e) (f) (g) ,ellipse, draw=black!40 ,dashed, fill = black!10   ](i){};
+		\end{scope}
+
+		\node[ rectangle callout, fill = green!80 , white ,text = black, callout absolute pointer = {(h.north) }, above=2mm of h]{ \scriptsize{$k_1$でない} };
+		\node[ rectangle callout, fill = green!80 , white ,text = black, callout absolute pointer = {(i.north) }, above=2mm of i]{ \scriptsize{$k_2$でない} };
+
+		\node[draw=white,fill=white,text=black,above=1mm of s](j){$k$};
+		\node[draw=white,fill=white,text=black,above=0.5mm of a](k){$k_1$};
+		\foreach \u / \v in{s/a,s/b,s/c,s/d,a/e,a/f,a/g}
+			\draw[-] (\u)--(\v);
+\end{tikzpicture}
+	}
+	\end{center}
+    \end{minipage}
+
+    \begin{minipage}[b]{0.3\hsize}
+	\caption*{}
+	    \begin{center}
+	\scalebox{0.7}{
+    \begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+		\node(s){$p$};
+		\node[right =of s](a){$q$};
+		\node[ above left =of s](b){};
+		\node[ left = of s ](c){};
+	    	\node[ below left =of s](d){};
+	    	\node[ above right=of a](e){};
+	    	\node[ right =of a](f){};
+	    	\node[ below right=of a](g){};
+		
+		\begin{scope}[on background layer]
+		    \node[ fit= (b) (c) (d) ,ellipse, draw=black!40 ,dashed, fill =black!10   ](h){};
+		\end{scope}
+		\begin{scope}[on background layer]
+		    \node[ fit= (e) (f) (g) ,ellipse, draw=black!40 ,dashed, fill =black!10   ](i){};
+		\end{scope}
+
+		\node[ rectangle callout, fill = green!80 , white ,text = black, callout absolute pointer = {(h.north) }, above=2mm of h]{ \scriptsize{$k_1$でない} };
+		\node[ rectangle callout, fill = green!80 , white ,text = black, callout absolute pointer = {(i.north) }, above=2mm of i]{ \scriptsize{$k_2$でない} };
+
+		\node[draw=white,fill=white,text=black,above=1mm of s](j){$k$};
+		\node[draw=white,fill=white,text=black,above=0.5mm of a](k){$k_1$};
+		%\node<3>[fill=white,text=R,above=1mm of s](j){$k_1$};
+		%\node<3>[fill=white,text=R,above=0.5mm of a](k){$k_2$};
+		\node[draw=white,fill=white,text=black,above left= of e](l){$k_2$};
+		%\visible{\node[fill=white,text=black,above left= of e](l){$k_2$};}
+		
+		\path[-> ,every node/.style={font=\sffamily=\small} ]
+		(k) edge [bend right] node [left]{}(j);
+		\path[-> ,every node/.style={font=\sffamily=\small} ]
+		(l) edge [bend right] node [left]{}(k);
+
+		\foreach \u / \v in{s/a,s/b,s/c,s/d,a/e,a/f,a/g}
+			\draw[-] (\u)--(\v);
+	    \end{tikzpicture}
+		}
+	    \end{center}
+    \end{minipage}
+    \begin{minipage}[b]{0.3\hsize}
+	\begin{center}
+	\caption*{適用後}
+	\scalebox{0.7}{
+    \begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+		\node(s){$p$};
+		\node[right =of s](a){$q$};
+		\node[ above left =of s](b){};
+		\node[ left = of s ](c){};
+	    	\node[ below left =of s](d){};
+	    	\node[ above right=of a](e){};
+	    	\node[ right =of a](f){};
+	    	\node[ below right=of a](g){};
+		
+		\begin{scope}[on background layer]
+		    \node[ fit= (b) (c) (d) ,ellipse, draw=black!40 ,dashed, fill = black!10   ](h){};
+		\end{scope}
+		\begin{scope}[on background layer]
+		    \node[ fit= (e) (f) (g) ,ellipse, draw=black!40 ,dashed, fill = black!10   ](i){};
+		\end{scope}
+
+		\node[ rectangle callout, fill = green!80 , white ,text = black, callout absolute pointer = {(h.north) }, above=2mm of h]{ \scriptsize{$k_1$でない} };
+		\node[ rectangle callout, fill = green!80 , white ,text = black, callout absolute pointer = {(i.north) }, above=2mm of i]{ \scriptsize{$k_2$でない} };
+
+		\node[draw=white,fill=white,text=black,above=1mm of s](j){$k_1$};
+		\node[draw=white,fill=white,text=black,above=0.5mm of a](k){$k_2$};
+		\foreach \u / \v in{s/a,s/b,s/c,s/d,a/e,a/f,a/g}
+			\draw[-] (\u)--(\v);
+\end{tikzpicture}
+	    }
+	\end{center}
+    \end{minipage}
+\end{tabular}
+    \caption{再彩色アルゴリズムの動作}
+    \label{fig:RE-NUMBER}
+\end{figure}
+
+\begin{algorithm}[p]
+    \caption{再彩色アルゴリズム}
+    \label{alg:Re_Color}
+    \begin{algorithmic}[1]
+	\Procedure{RE-COLOR}{ $p,k,cutc$ }
+		\For{ $k_1 := 1 \ $ \textbf{to}$ \  cutc-1$ }
+			\If{ $| C_{k_1} \cap \Gamma(p)| = 1$}
+				\For{ $k_2 := k_1 \ $ \textbf{to}$ \ cutc$ }
+					\If{ $| C_{k_2} \cap \Gamma(p)| = 0$}	
+						\State $C_{k} := C_{k} - \{ p \} $
+						\State $C_{k_1} := ( C_{k_1} - \{  q \} ) \cup \{p\}$
+						\State $C_{k_2} := C_{k_2} \cup \{ q \}$
+						\State \textbf{return}
+					\EndIf
+				\EndFor
+			\EndIf
+		\EndFor
+	\EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+
+\subsection{MCSの彩色アルゴリズム}
+%\subsubsection*{MCSの彩色アルゴリズム}
+MCSの彩色アルゴリズムは，RE-COLORをNUMBER-SORTに組み込んだアルゴリズムである．
+この彩色アルゴリズムをNUMBER-SORT-Rとする．
+NUMBER-SORT-Rの擬似コードを，Algorithm \ref{alg:NUMBER_SORT_R}に示す．
+彩色の順番には，探索の前処理として行われたEXTEND-INITIAL-SORT-NUMBERで並べられた初期の頂点の整列順序を用いる．
+NUMBER-SORT-Rでは，頂点の整列順序に従い先頭から彩色を行う．
+その頂点の彩色番号を$k$とする．
+RE-COLORに時間をかけ過ぎないように，
+\begin{equation}
+	k > cutc かつk=（現在の最大彩色番号）
+	\notag
+\end{equation}
+を満たすときのみ，RE-COLORを適用する．
+%ある頂点$p$に対してRE-COLORの適用条件を$p$の彩色番号を$k$としたときに，
+% ($k > cutc$)かつ($k=$ (現在の最大彩色番号) )であるときに限定している．
+%NUMBER-SORT-Rの擬似コードを，Algorithm \ref{alg:NUMBER_SORT_R}に示す．
+	
+\begin{algorithm}[htbp]
+    \caption{MCSの彩色アルゴリズム} 
+    \small
+    \label{alg:NUMBER_SORT_R}
+    \begin{algorithmic}[1]
+	\Procedure{ NUMBER-SORT-R }{$V_s, R , \mathrm{No} , cutc$}
+		\State $|R|:=|V_s|$
+		%\Statex \{NUMBER\}
+		，$k_{max} :=1 $
+	        ，$C_1 := \emptyset$
+		\For{ $ i:=1 \ $ \textbf{to} $\ |V_s|$ }
+			\State $p:=Vs[i]$，$k:=1$
+			\While{ $(C_k \cap \Gamma(p) ) \neq \emptyset $}
+				\State $k := k+1$
+			\EndWhile
+			\If{ $k > k_{max}$ }
+				\State $k_{max}:=k$，$C_{k_{max}} := \emptyset$
+			\EndIf
+			\State $C_k := C_k \cup \{ p \} $
+			%\Statex \{ == RE-COLOR適用部分 start == \}
+			\If{ $ (k>cutc)$ \  \textbf{and}\  $(k = k_{max} )$ }
+				\State \Call{RE-COLOR}{$p,k$}
+				\If{ $C_{k_{max}} = \emptyset $ }
+					\State $k_{max}:=k_{max}-1$
+				\EndIf
+			\EndIf
+			%\Statex \{ == RE-COLOR適用部分 end== \}
+		\EndFor
+		%\Statex \{ SORT \}
+		\State $i:=|V_s|$
+		\If{ $cutc < 0 $ } 
+		\State $cutc := 0$
+		\EndIf
+		\For{ $k:=k_{max} \ $\textbf{downto} $\ cutc+1$}
+			\For{ $j:=|C_k|\ $ \textbf{downto} $\ 1$}
+				\State $R[i]:=C_k[j]$
+				\State $\mathrm{No}[ R[i] ]:=k$
+				\State $i:=i-1$
+			\EndFor
+		\EndFor
+		\If{ $i \neq 0$ }
+			\State $\mathrm{No}[R[i]] := cutc$
+		\EndIf
+	\EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+
+\subsection{近似解の適用}
+\label{sec:apply-approximate}
+最大クリークの下界が既知であるのならば，従来の分枝限定法やRE-COLORの条件により探索の効率化が期待できる．
+よって探索前に近似解を求めておくことで，その値を下界として探索を効率化する．
+%クリーク問題については，
+%一般に近似困難性が知られているため，
+%多くの問題に対して良い精度を得る近似アルゴリズムは難しいが，比較的良好な近似解を得るヒューリスティックは多く存在する．
+本論文の近似アルゴリズムには，\ref{sec:relation}節で紹介したKLSを利用する．
+%本論文の近似アルゴリズムには，$k$-opt Local Search(KLS)\cite{katayama2005effective}を利用する．
+KLSアルゴリズムとは，局所探索により最大クリークを近似するアルゴリズムである．
+各探索に対して1つの頂点を起点として探索を行う．多くの頂点を起点として，
+探索する回数を増やすことで近似精度の向上を期待できるが，アルゴリズムの実行時間が増加することはできるだけ避ける必要がある．
+そのため，探索回数を$20\sqrt{ |V|}\times Dens( G )^3$とする．
+これは，辺密度が高いグラフでは探索回数が増え，辺密度が低いグラフでは探索する頂点は少なくなる．
+%\subsubsection*{MCSアルゴリズム}
+%以上の点を踏まえたのがMCSアルゴリズムである．
+%擬似コードはAlgorithm \ref{alg:MCS_alg}に示す．
+%擬似コードをのせる.
+\begin{algorithm}[htbp]
+    \caption{MCSアルゴリズム}
+    \small
+    \label{alg:MCS_alg}
+    \begin{algorithmic}[1]
+	\Procedure{ MCS }{$ G = ( V ,E ) $}
+		\State $Q:=\emptyset , Q_{max} := \emptyset$
+		%\State 拡張イニシャルソート
+		\State \Call{EXTEND-INITIAL-SORT-NUMBER}{ $ V , Q_{max} , \mathrm{No}$ }
+		%\State グラフの再構成
+		\State Apply approximation algorithm
+		%\State \Call{EXPAND}{$V,V,\mathrm{No}$}
+		\While{ $|Q| + |V| > |Q_{max}| $ }
+			\State $p:=$ the last vertex in $V$
+			\If{ $|Q| + \mathrm{No}[p] > |Q_{max} |$ }
+				\State $V_s:= V \cap \Gamma(p)$
+				\State \Call{EXPAND}{$V_s$}
+			\Else \ \textbf{return} \ $Q_{max}$
+			\EndIf
+		\EndWhile
+		%\State \Return $Q_{max}$
+		\State \textbf{return} \ $Q_{max}$
+	\EndProcedure
+    \end{algorithmic}
+    \begin{algorithmic}[1]
+	\Procedure{ EXPAND }{ $ V_s $ }
+		\State \Call{ NUMBER-SORT-R }{ $V_s ,R , \mathrm{No} , |Q_{max}| - |Q| $ }
+		\While{ $ R \neq \emptyset $}
+			\State $p:=$ the last vertex in $R$
+			\If{ $ | Q | + \mathrm{No}[p] > |Q_{max} |$ }
+				\State $ Q := Q \cup \{ p \}$
+				\State $ V_p := V_s \cap \Gamma( p )$ \Comment{ 順序は保存する }
+				\If{ $ V_p \neq \emptyset $ }
+					%\State \Call{ NUMBER-SORT-R }{ $V_p , newR , \mathrm{newNo}$ }
+					\State \Call{ EXPAND }{ $V_p$ }
+				\ElsIf{ $|Q| > |Q_{max}| $}
+					\State $Q_{max}:=Q$
+				\EndIf
+			\Else \  \textbf{return}
+			\EndIf
+			\State $Q := Q - \{ p \}$
+			\State $R := R - \{ p \}$
+			\State $V_s := V_s - \{ p \}$ \Comment{ 順序は保存する }
+		\EndWhile
+	\EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+
+\begin{comment}
+\begin{algorithm}[htbp]
+    \caption{MCSアルゴリズム}
+    \label{alg:MCS_alg}
+    \begin{algorithmic}[1]
+	\Procedure{ MCS }{$ G = ( V ,E ) $}
+		\State $Q:=\emptyset , Q_{max} := \emptyset$
+		%\State 拡張イニシャルソート
+		\State \Call{EXTEND-INITIAL-SORT-NUMBER}{ $ V , Q_{max}$ }
+		%\State グラフの再構成
+		\State Apply approximation algorithm
+		\State \Call{EXPAND}{$V,V,\mathrm{No}$}
+		%\State \Return $Q_{max}$
+		\State \textbf{return} \ $Q_{max}$
+	\EndProcedure
+    \end{algorithmic}
+    \begin{algorithmic}[1]
+	\Procedure{ EXPAND }{ $ V_s , R , \mathrm{No} $ }
+		\While{ $ R \neq \emptyset $}
+			\State $p:=$ the last vertex in $R$
+			\If{ $ | Q | + \mathrm{No}[p] > |Q_{max} |$ }
+				\State $ Q := Q \cup \{ p \}$
+				\State $ V_p := V_s \cap \Gamma( p )$ \Comment{ 順序は保存する }
+				\If{ $ V_p \neq \emptyset $ }
+					\State \Call{ NUMBER-SORT-R }{ $V_p , newR , \mathrm{newNo}$ }
+					\State \Call{ EXPAND }{ $V_p , newR , \mathrm{newNo}$ }
+				\ElsIf{ $|Q| > |Q_{max}| $}
+					\State $Q_{max}:=Q$
+				\EndIf
+			\Else \  \textbf{return}
+			\EndIf
+			\State $Q := Q - \{ p \}$
+			\State $R := R - \{ p \}$
+			\State $V_s := V_s - \{ p \}$ \Comment{ 順序は保存する }
+		\EndWhile
+	\EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+\end{comment}
+%\subsection{MCTアルゴリズム}
+%MCT
+
+
+	\begin{comment}
+\begin{algorithm}[htbp]
+    \caption{MCSの彩色アルゴリズム} 
+    \small
+    \label{alg:NUMBER_SORT_R}
+    \begin{algorithmic}[1]
+	\Procedure{ NUMBER-SORT-R }{$V_s, R , \mathrm{No} , cutc$}
+		\State $|R|:=|V_s|$
+		%\Statex \{NUMBER\}
+		，$k_{max} :=1 $
+	        ，$C_1 := \emptyset$
+		\For{ $ i:=1 \ $ \textbf{to}$\ |V_s|$ }
+			\State $p:=Vs[i]$，$k:=1$
+			\While{ $(C_k \cap \Gamma(p) ) \neq \emptyset $}
+				\State $k := k+1$
+			\EndWhile
+			\If{ $k > k_{max}$ }
+				\State $k_{max}:=k$，$C_{k_{max}} := \emptyset$
+			\EndIf
+			\State $C_k := C_k \cup \{ p \} $
+			%\Statex \{ == RE-COLOR適用部分 start == \}
+			\If{ $ (k>cutc)$ \  \textbf{and}\  $(k = k_{max} )$ }
+				\State \Call{RE-COLOR}{$p,k$}
+				\If{ $C_{k_{max}} = \emptyset $ }
+					\State $k_{max}:=k_{max}-1$
+				\EndIf
+			\EndIf
+			%\Statex \{ == RE-COLOR適用部分 end== \}
+		\EndFor
+		%\Statex \{ SORT \}
+		\State $i:=|V_s|$
+		\If{ $cutc < 0 $ } 
+		\State $cutc := 0$
+		\EndIf
+		\For{ $k:=k_{max} \ $\textbf{downto} $\ cutc+1$}
+			\For{ $j:=|C_k|\ $ \textbf{downto}  
+
+
+
+			$R , \mathrm{newNo}$ }
+					\State \Call{ EXPAND }{ $V_p$ }
+				\ElsIf{ $|Q| > |Q_{max}| $}
+					\State $Q_{max}:=Q$
+				\EndIf
+			\Else \  \textbf{return}
+			\EndIf
+			\State $Q := Q - \{ p \}$
+			\State $R := R - \{ p \}$
+			\State $V_s := V_s - \{ p \}$ \Comment{ 順序は保存する }
+		\EndWhile
+	\EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+\end{comment}
+\begin{comment}
+\begin{algorithm}[htbp]
+    \caption{MCSアルゴリズム}
+    \label{alg:MCS_alg}
+    \begin{algorithmic}[1]
+	\Procedure{ MCS }{$ G = ( V ,E ) $}
+		\State $Q:=\emptyset , Q_{max} := \emptyset$
+		%\State 拡張イニシャルソート
+		\State \Call{EXTEND-INITIAL-SORT-NUMBER}{ $ V , Q_{max}$ }
+		%\State グラフの再構成
+		\State Apply approximation algorithm
+		\State \Call{EXPAND}{$V,V,\mathrm{No}$}
+		%\State \Return $Q_{max}$
+		\State \textbf{return} \ $Q_{max}$
+	\EndProcedure
+    \end{algorithmic}
+    \begin{algorithmic}[1]
+	\Procedure{ EXPAND }{ $ V_s , R , \mathrm{No} $ }
+		\While{ $ R \neq \emptyset $}
+			\State $p:=$ the last vertex in $R$
+			\If{ $ | Q | + \mathrm{No}[p] > |Q_{max} |$ }
+				\State $ Q := Q \cup \{ p \}$
+				\State $ V_p := V_s \cap \Gamma( p )$ \Comment{ 順序は保存する }
+				\If{ $ V_p \neq \emptyset $ }
+					\State \Call{ NUMBER-SORT-R }{ $V_p , newR , \mathrm{newNo}$ }
+					\State \Call{ EXPAND }{ $V_p , newR , \mathrm{newNo}$ }
+				\ElsIf{ $|Q| > |Q_{max}| $}
+					\State $Q_{max}:=Q$
+				\EndIf
+			\Else \  \textbf{return}
+			\EndIf
+			\State $Q := Q - \{ p \}$
+			\State $R := R - \{ p \}$
+			\State $V_s := V_s - \{ p \}$ \Comment{ 順序は保存する }
+		\EndWhile
+	\EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+\end{comment}
+%\subsection{MCTアルゴリズム}
+%MCT
+
+
+\subsection{MCSアルゴリズムの空間計算量}
+%MCSアルゴリズムでは，探索木の各頂点で候補点集合のサイズのメモリが必要である．
+%さらに探索木の深さは最大で，クリークのサイズ$\omega$になる．
+%なので，
+%TomitaらによってMCSの空間計算量は，示されていないので以下にに示す．
+%MCSアルゴリズムの分枝数は指数的に増加する可能性がある．よって，全体の時間計算量は指数時間である．
+%グラフ$G=(V,E)$に対して，$n = |V|$，$m = |E|$とし，最大クリークのサイズを$w$とする．
+%グラフ$G=(V,E)$に対して，$n$と$m$を$n = |V|$，$m = |E|$とし，最大クリークのサイズを$$とする．
+%提案アルゴリズムの空間計算量に対して以下のことがいえる．
+MCSは，深さ優先探索を行い，図\ref{fig:MCS}のように動作する．
+したがって，MCSの空間計算量は，以下のことがいえる．
+%空間計算量は$O( nw )$になる．
+%よって，グラフの次数とクリークが近いとき空間計算量が大きくなりやすい．
+
+\begin{lemma}[MCSアルゴリズムの探索中の空間計算量] 
+    \label{lemma:MCS_mem}
+    %最大クリークが未発見のときの
+    MCSアルゴリズム探索中に使用する空間計算量は，$O(n\omega)$である．
+\end{lemma}
+\begin{Proof*}{}
+    %基本アルゴルズムは深さ優先探索なので，
+    探索の各段階で，子が探索を行っているときは，親は探索を終了できないので，候補点集合$R$やその彩色番号の情報を持っている．
+    したがって，
+    探索木の根から葉まで合計メモリ使用量を考える．
+    探索木の子の頂点に行くときにクリーク$Q$に頂点を１つ追加しているので，探索木の最大の深さは$\omega$である．
+    %探索木の各頂点では，候補点集合$R$とその彩色番号の情報を持っている．
+    \begin{equation}
+     |R| \leq  |V| = n 
+    \notag
+    \end{equation}
+    したがって，探索中の空間計算量は$O(n \omega)$である．\qed
+\end{Proof*}
+\begin{lemma}[MCSアルゴリズムの隣接行列での空間計算量]
+    MCSアルゴリズムの隣接行列での空間計算量は，$O(n^2)$である．
+\end{lemma}
+\begin{Proof*}{}
+    MCSの探索中のに使用する空間計算量は，定理\ref{lemma:MCS_mem}から$O(n\omega)$である．
+    \ref{sec:neighbormatrix}で述べたようにグラフの隣接行列の空間計算量は，$O(n^2)$である．
+    $ \omega \leq m$なので，
+    グラフの隣接行列でのMCSアルゴリズムの空間計算量は，
+    \begin{equation}
+	O( n\omega ) + O( n^2 ) = O(n^2 )
+    \notag
+    \end{equation}
+    となる．\qed
+\end{Proof*}
+\begin{lemma}[MCSアルゴリズムの隣接リストでの空間計算量]
+    MCSアルゴリズムの隣接リストでの空間計算量は，$O(n \omega + m )$である．
+\end{lemma}
+
+\begin{Proof*}{}
+    MCSの探索中のに使用する空間計算量は，定理\ref{lemma:MCS_mem}から$O(n \omega)$である．
+    %グラフの隣接行列の空間計算量は$O(n^2)$，
+    \ref{sec:neighborlist}で述べたように隣接リストの空間計算量は，$O(n + m )$である．
+    $\omega \leq n $なので，
+    %グラフの隣接行列でのMCSアルゴリズムの空間計算量は，
+    %\begin{equation}
+%	O( nw ) + O( n^2 ) = O(n^2 )
+ %   \end{equation}
+  %  となる．\\
+    グラフの隣接リストでのMCSの空間計算量は，
+    \begin{equation}
+    O( n\omega ) + O( n + m  ) = O( n\omega + n + m ) = O(n\omega + m )
+    \notag
+    \end{equation}
+    となる．\qed
+\end{Proof*}
+
+\subsection{MCSアルゴリズムの時間計算量}
+%TomitaらによってMCSの時間計算量は，示されていないので以下に示す．
+%グラフ$G=(V,E)$に対して，$n = |V|$，$m = |E|$とする．
+%グラフ$G=(V,E)$に対して，$n$と$m$を$n = |V|$，$m = |E|$とする．
+%提案アルゴリズムの空間計算量に対して以下のことがいえる．
+MCSの分枝数は指数的に増加する可能性がある．
+したがって，全体の時間計算量は，指数時間である．
+再帰処理のEXPANDにかかる時間計算量について解析をする．
+\begin{lemma}[NUMBER-SORT-Rの時間計算量]
+    NUMBER-SORT-Rの時間計算量は隣接行列では，$O(n^3)$時間である．
+    隣接リストでは，$O(n^3 \log n )$時間である．
+\end{lemma}
+\begin{Proof*}{}
+    %Algorithm \ref{alg:NUMBER_SORT_R}の5--7行目では，頂点$p$が彩色できる最小の彩色番号を探している．
+    %これには，彩色番号$k$が付いている頂点集合$C_k$の頂点が$p$に隣接していないかを確かめる．
+    %各頂点は１つしか彩色番号を持たないので，最大でも$n$回の比較しか行われない．
+    %隣接行列の頂点の隣接関係を調べるのは$O(1)$時間，隣接リストでは$O( \log n )$時間で行える．
+    %以上より5--7行目は，隣接行列では$O(n)$時間，隣接リストでは$O( n \log n )$時間で行える．
+    Algorithm \ref{alg:NUMBER_SORT_R}の3--18行目以外は，$O(n)$時間で行える．
+    3--18行目の中で最も時間がかかるのは，13行目のRE-COLORアルゴリズムである．
+    隣接行列の頂点の隣接関係を調べるのは，$O(1)$時間，隣接リストでは，$O( \log n )$時間で行える．
+    RE-COLORアルゴリズムの最悪な場合は，頂点$p,q$に対して全ての頂点をみる可能性があるので，
+    隣接行列では，$O(n^2)$時間で隣接リストでは，$O(n^2 \log n )時間$である．
+    これを，最大$n$回行う．NUMBER-SORT-Rは隣接行列では$O(n^3)$時間で行えて，隣接リストでは$O(n^3 \log n )$時間で行うことができる．
+\end{Proof*}
+
+\begin{lemma}[EXPANDの時間計算量]
+    EXPANDの時間計算量は隣接行列では，$O(n^3)$時間である.
+    隣接リストでは，$O(n^3 \log n)$時間である．
+\end{lemma}
+
+\begin{Proof*}{}
+    %NUMBER-SORT-Rの時間計算量は$O(n^2)$である．
+    Algorithm \ref{alg:MCS_alg}のEXPANDの4--17行目までの処理で再帰のEXPAND以外は，$O(n \log n)時間$で行える．
+    EXPANDアルゴリズムで最も時間がかかるステップは，NUMBER-SORT-Rである．
+    これを，最大で$n$回繰り返される．
+    したがって，EXPANDアルゴリズムの時間計算量は隣接行列では，$O(n^3)$時間である．
+    隣接リストでは，$O(n^3 \log n )$時間である．
+    %NUMBER-SORT-Rは，各EXPANDの先頭処理として部分グラフを彩色していると見れる．
+    %これは各EXPANDに対して一度しか行われない.
+    %さらに親で行われるNUMBER-SORT-Rは子のグラフに対して行われるので，
+    %EXPANDアルゴリズムの平均時間計算量は$O(n^2)$である．
+\end{Proof*}
+
+
+\begin{figure}[p]
+\begin{tabular}{cc}
+    \begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+    	\caption*{再帰適用前}
+	    %\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+	    \node[fill=black!20](s){};
+		%\node(s){};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		\node[ above =1mm of s , draw = white ](ss){$R$};
+		\node[ above left  =1mm of b , draw = white ](cc){};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+		\foreach \u / \v in{ss/cc}
+			\draw[->] (\u)--(\v);	
+    	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+	
+	    \begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+    	\caption*{再帰適用後		
+%\small{$V_{\mathrm{d}}:= R - \Gamma(p) $ }
+		}
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+    	%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	    \node(s){};
+		\node[below =of s](a){};
+		\node[fill=black!20,left=of a](b){};
+		\node[right =of a](c){};
+		\node[rectangle , above =1mm of s , draw = white ](ss){\small{$R$} };
+		\node[ above left=1mm of b , draw = white ](cc){ \small{$R':= R \cap \Gamma(p) $ } };
+		%\node[above left=1mm of b , draw = white ](cc){ \small{$R':= R-V_{ \mathrm{d} }$ } };
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+ \\ 
+		\\
+	\begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+    	\caption*{バックトラック適用前}
+	    %\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+		\node(s){};
+		\node[below =of s](a){};
+		\node[fill=black!20, left=of a](b){};
+		\node[right =of a](c){};
+		\node[ above =1mm of s , draw = white ](ss){ $R$ };
+		\node[ above left  =1mm of b , draw = white ](cc){ $R'$};
+		%\node[ above left  =1mm of b , draw = white ](cc){ $R'$};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+		\foreach \u / \v in{ss/cc}
+			\draw[<-] (\u)--(\v);	
+    	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+	
+	    \begin{minipage}[b]{0.5\hsize}
+	    \begin{center}
+	\caption*{バックトラック適用後
+       %\small{$R := R' \cup V_{\mathrm{d} }-\{p\}$} \\  \small{$ V_{\mathrm{e} }:= V_{\mathrm{e} } \cup \{p\} $ } 
+		}
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+    	%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	    \node[fill=black!20](s) {};
+	    %\node(s) {};
+	    %\node[label=above:\small{$R:=R'\cup V_{\mathrm{d}-\{p\} } \\ V_{\mathrm{e}}:=V_{\mathrm{e}} \cup \{p\}$}  ](s) {};
+		\node[below =of s](a){};
+		\node[left=of a](b){};
+		\node[right =of a](c){};
+		%\node[above =1mm of s , draw = white ](ss){};
+		%\node[ rectangle,above =1mm of s , draw = white ](ss){ \small{$R := R' \cup V_{\mathrm{d} }-\{p\} $ \newline  $ V_{\mathrm{e} }:= V_{\mathrm{e} } \cup \{p\} $ } };
+		\node[ rectangle,above =1mm of s , draw = white ](ss){ \small{$R$ } };
+		%\node[ rectangle,above =7mm of s , draw = white ](s2){ \small{$R := R' \cup V_{\mathrm{d} }-\{p\} $ } };
+		%\node[above left=1mm of b , draw = white ](cc){};
+	    	\foreach \u / \v in{s/a,s/b,s/c}
+			\draw[-] (\u)--(\v);
+	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+
+
+\end{tabular}
+    %\caption{完全グラフ}
+    \caption{MCSの動作  
+	    }
+    \label{fig:MCS}
+	    \centering
+	    $R,R'$は，候補点集合とし，$p$は探索を行う頂点とする．
+\end{figure}
+
+
+
+

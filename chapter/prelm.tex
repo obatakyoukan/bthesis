@@ -1,0 +1,291 @@
+\chapter{準備}
+\label{ch:prelm}
+
+本章では，
+本論文で用いる基本的なグラフに関する定義と記法を導入する．
+%後の章で必要となる基本的な概念と定義を導入する．
+まず，\ref{sec:graph}節では，グラフの基本的な定義をする．
+次に，\ref{sec:graph_represetion}節では，グラフの表現方法について説明する．
+\section{グラフ}
+\label{sec:graph}
+この節では，グラフの諸定義を行う．
+本論文では，$[A]^k := \{ X \subseteq A | |X| = k \}$とする．
+%本論文では，$[A]^2 := \{ X \subseteq A | |X| = 2 \}$とする．
+%は，$A$の冪集合の中で，2要素からなる全て集合を要素とした集合とする．
+%本論文では，$[A]^2$は，$A$の冪集合の中で，2要素からなる全て集合を要素とした集合とする．
+ここで，$V$を有限集合，$E \subseteq [V]^2$とする．
+
+\subsection*{無向グラフ}
+無向グラフは，対$G=(V,E)$である．
+この集合$V$を$G$の頂点集合と呼び，集合$E$を$G$の辺集合と呼ぶ．
+$V$の各要素は，頂点と呼ぶ．
+$E$の各要素は，辺と呼ぶ．%辺は$V$の2つの要素の部分集合である．
+%辺は，$V$の部分集合でサイズが2のものである．
+
+無向グラフの例として，
+\begin{eqnarray*}
+    V &=& \{ 1,2,3,4,5,6 \} \\
+    E &=& \{ \{1,2\},\{1,4\}, \{1,5\},\{2,3\},\{2,4\},\{2,5\},\{3,4\},\{3,5\},\{3,6\},\{4,5\},\{5,6\} \}
+\end{eqnarray*}
+である無向グラフ$G=(V,E)$を考える．
+このとき$G$は，図\ref{fig:simplegraph}を示している．
+
+今後，無向グラフのことを単にグラフと呼ぶ．
+%本論文でのグラフは，無向グラフを対象とする．
+%以後グラフとは，無向グラフとする．
+\subsection*{グラフの基本要素}
+%$V$を頂点の集合とし，$E \subseteq V \times V$ を辺の集合としてグラフは$G = (V,E)$で表される．
+%隣接
+グラフのサイズとは，頂点集合のサイズのことをいう．
+頂点$u,v\in V$について，$ \{u,v \} \in E $を満たすとき，$u,v$が隣接しているという．
+%頂点$u,v \in V$とする．$\{u,v\} \in E$のときのみ，頂点$u,v$は，隣接しているとする．
+%頂点の数$|V|$とする．
+
+頂点$v \in V$の隣接している頂点の集合を$\Gamma (v) $と表し，これを隣接頂点集合という．
+隣接する頂点の数を頂点の次数と呼ぶ．頂点$v \in V$の次数を，$deg(v)$で表す．
+本論文では，グラフ$G=(V,E)$の辺密度$Dens(G)$は，$\frac{2|E|}{|V|(|V|-1)}$と定義する．
+
+たとえば，
+図\ref{fig:simplegraph}での頂点1と3の隣接頂点集合は，$\Gamma (1) = \{ 2,4,5 \}$と$\Gamma (3 ) = \{2,4,5,6 \}$である．
+%図\ref{fig:simplegraph}での
+頂点の次数は，$(deg(1),deg(2),deg(3),deg(4),deg(5),deg(6)) =(3,4,4,4,5,2)$である．
+%図\ref{fig:simplegraph}の
+グラフの辺密度は，$\frac{ 2 \times 11 }{ 6 \times 5 } = 0.73$である．
+%本論文では，単純無向グラフを対象とする．単純無効グラフは，$V$を頂点集合，$E \subseteq V \times V $ を辺の集合としたときに$G = (V,E)$で表され，
+
+%\subsection*{補グラフ}
+グラフ$G=(V,E)$に対して，$V' = V, E' = [V]^2 - E$を満たすグラフ$G'=(V',E')$を$G$の補グラフという．
+図\ref{fig:simplegraph}の補グラフは，図\ref{fig:complementgraph}に示す．
+%\end{comment}
+
+\begin{comment}
+%グラフ$G=(V,E)$の補グラフ$G'=(V',E')$とは以下の条件を満たす．
+(2.1)，(2.2)の条件を満たすとき，グラフ$G'=(V',E')$は，グラフ$G=(V,E)$の補グラフである．
+$V'$は次の条件を満たす．
+\begin{equation}
+    V' = V 
+\end{equation}
+%任意の２頂点$u,v\in V$に対して，
+%\begin{equation}
+%    \begin{cases}
+%    				(u,v) \in E なら (u,v) \notin E' \\
+%    				(u,v) \notin E なら (u,v) \in E'
+%    \end{cases}
+%\end{equation}
+
+頂点集合$V$の完全グラフ$K_{|V|}=(V,E_K)$としたとき，$E'$は次の条件を満たす．
+\begin{equation}
+    E' = E_K - E
+\end{equation}
+図\ref{fig:simplegraph}の補グラフは，図\ref{fig:complementgraph}に示す．
+\end{comment}
+
+%\subsection*{誘導部分グラフ}
+グラフ$G = (V,E)$の頂点の部分集合$S \subseteq V$に対して，
+$E'=\{ \{ u , v \} | \forall u , v \in S , \{ u,v\} \in E \}$としたとき，$G' =(S,E')$を$S$による誘導部分グラフという．
+
+%\subsection*{完全グラフ}
+頂点集合$V$中の任意の2頂点が隣接しているとき，グラフ$G$を，完全グラフという．
+%$n$頂点の完全グラフは$K_n$で表す．
+図\ref{fig:completegraph}は完全グラフの例である．
+%\subsection*{誘導部分グラフ}
+%誘導部分グラフの表現はどうするかは後で考える.
+
+%\subsection*{クリーク}
+グラフ$G = (V,E)$に対して，$V$の部分集合$U$に対する誘導部分グラフ$G[U]$が，完全グラフであるとき，
+誘導部分グラフ$G[U]$
+%（または，頂点集合$U$）
+をクリークという．
+%今回のクリークは，頂点集合$R$とする．
+本論文では，$U$から誘導されるクリークと$U$を同一視する．
+グラフに含まれるクリークで，最も頂点数が多いクリークを，最大クリークとする．
+最大クリークのサイズを，$\omega$と表す．
+図\ref{fig:simplegraph}での最大クリークは，$\{1,2,4,5\}$および，$\{2,3,4,5\}$である．
+
+以降では，グラフのサイズを$n$，辺の本数を$m$と表記する．
+
+
+
+\section{グラフの表現方法}
+\label{sec:graph_represetion}
+この節では，代表的なグラフの表現方法である隣接行列表現と隣接リスト表現について説明する．
+%さらに，計算機上で表現する際にかかる時間計算量や空間計算量に対して説明する．
+%グラフ$G=(V,E)$に対して，グラフのサイズを$n = |V|$，辺の本数を$ m = |E|$とする．
+\subsection{隣接行列}
+\label{sec:neighbormatrix}
+\begin{comment}
+隣接行列とは，グラフの隣接関係を表す行列である．
+グラフ$G=(V,E)$の隣接行列を$A$とすると，
+$A$は，0と1で構成される
+%$A_{u,v}\in \{0,1 \}$の
+$n\times n$行列である．
+$A_{u,v}$は，頂点$u,v \in V$が隣接しているとき1であり，隣接していないとき0である．
+\end{comment}
+頂点数$n$のグラフに対して，
+次の条件を満たす$n \times n$の行列$A$を$G$の隣接行列表現という．
+$A$の$i$行目$j$列目の要素$a_{ij}$に対し，$(i,j)\in E$なら1，そうでないなら0である．
+
+隣接行列は$n\times n$行列なので，空間計算量$ O( n^2 ) $で構成することができる．
+隣接行列でグラフを表した場合，任意の2頂点が隣接しているかは，$O(1)$時間で判定できる．
+%具体例を作る
+図\ref{fig:simplegraph}に関しての隣接行列は，図\ref{fig:Neighbormat}になる．
+
+\subsection{隣接リスト}
+\label{sec:neighborlist}
+隣接リストとは，グラフの隣接関係を表すリストである．
+グラフ$G=(V,E)$の隣接リストを$A$とすると，$A_u$は，頂点$u$の隣接頂点集合$\Gamma(u)$となる．
+隣接リストの空間計算量$ O ( n + m ) $ で構成することができる．
+任意の2頂点が隣接しているかは，$O(m)$時間で判定できる．
+%隣接リストをソートしておくことで二分探索をすることで$O( \log n )$時間で判定するように改善できる．
+もし，隣接リストをあらかじめソートして保存することができるなら，二分探索によって，
+頂点$u$との隣接関係を調べるのは，$O( \log | \Gamma(u) | )$時間で判定できるように改善できる．
+%具体例を作る
+図\ref{fig:simplegraph}に関する隣接リストは表\ref{tab:nlist}のとおりである．
+グラフ$G$に対し，その補グラフ$G'$の隣接リストを持つことでも，同様に確認できる．
+図\ref{fig:simplegraph}に関しての補グラフの隣接リストは，表\ref{tab:nlist2}のとおりである．
+\begin{figure}[p]
+    	\centering
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+    	%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+		\node(s){1};
+		\node[above right=of s](a){2};
+		\node[below right=of s](b){3};
+		\node[right = of a](c){4};
+		\node[right = of b](d){5};
+		\node[below right=of c](e){6};
+		
+	    	
+		\foreach \u / \v in{s/a,s/c,s/d,a/b,a/c,a/d,b/c,b/d,b/e,c/d,d/e}
+			\draw[-] (\u)--(\v);
+    	\end{tikzpicture}
+	    \caption{無向グラフの例}
+	    \label{fig:simplegraph}
+\end{figure}  
+	
+	\begin{figure}[p]
+	\centering
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+    	%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+		\node(s){1};
+		\node[above right=of s](a){2};
+		\node[below right=of s](b){3};
+		\node[right = of a](c){4};
+		\node[right = of b](d){5};
+		\node[below right=of c](e){6};
+		
+	    	
+		\foreach \u / \v in{s/b,s/e,a/e,c/e}
+		%\foreach \u / \v in{s/a,s/c,s/d,a/b,a/c,a/d,b/c,b/d,b/e,c/d,d/e}
+			\draw[-] (\u)--(\v);
+    	\end{tikzpicture}
+	    \caption{図\ref{fig:simplegraph}の補グラフの例}
+	    \label{fig:complementgraph}
+
+\end{figure}
+
+
+\begin{figure}[p]
+\begin{tabular}{cc}
+	\begin{minipage}{0.5\hsize}
+	    \begin{center}
+	    %\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+		\node(s){1};
+		\node[below right=of s](a){2};
+		\node[above right=of s](b){3};
+		\node[right=1.5cm of a](c){4};
+		\node[right=1.5cm of b](d){5};
+	    	\foreach \u / \v in{s/a,s/b,s/c,s/d,a/b,a/c,a/d,b/c,b/d,c/d}
+			\draw[-] (\u)--(\v);
+    	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+	
+	\begin{minipage}{0.5\hsize}
+	    \begin{center}
+	\begin{tikzpicture}[every node/.style={circle,draw=black,fill=white,black} ]
+    	%\begin{tikzpicture}[every node/.style={circle,fill=DodgerBlue,white} ]
+		\node(s){1};
+		\node[above right=of s](a){2};
+		\node[below right=of s](b){3};
+		\node[right = of a](c){4};
+		\node[right = of b](d){5};
+		\node[below right=of c](e){6};
+	    	\foreach \u / \v in{s/a,s/b,s/c,s/d,s/e,a/b,a/c,a/d,a/e,b/c,b/d,b/e,c/d,c/e,d/e}
+			\draw[-] (\u)--(\v);
+    	\end{tikzpicture}
+	    \end{center}
+	\end{minipage}
+    \end{tabular}
+    %\caption{完全グラフ}
+    \caption{完全グラフの例}
+	    \label{fig:completegraph}
+	\end{figure}
+
+
+
+\newpage
+    \begin{figure}[p]
+    \begin{center}
+$
+    \left(
+	\begin{array}{cccccc}
+	    0&1&0&1&1&0\\
+	    1&0&1&1&1&0\\
+	    0&1&0&1&1&0\\
+	    1&1&1&0&1&0\\
+	    1&1&1&1&0&1\\
+	    0&0&1&0&1&0
+	\end{array}
+	\right)
+$
+	\caption{図\ref{fig:simplegraph}の隣接行列}
+	\label{fig:Neighbormat}
+    \end{center}
+    \end{figure}
+
+\begin{table}[p]
+    \begin{center}
+	\caption{図\ref{fig:simplegraph}の隣接リスト}
+	\label{tab:nlist}
+	\begin{tabular}{|c|c|}
+	    \hline 
+	    頂点番号& 隣接頂点\\ \hline
+	    1 & 2,4,5\\ \hline
+	    2 & 1,3,4,5\\ \hline
+	    3 & 2,4,5,6\\ \hline
+	    4 & 1,2,3,5\\ \hline
+	    5 & 1,2,3,4,6\\ \hline
+	    6 & 3,5 \\ \hline
+	\end{tabular}
+    \end{center}
+\end{table}
+
+\begin{table}[p]
+    \begin{center}
+	\caption{図\ref{fig:simplegraph}の補グラフの隣接リスト}
+	\label{tab:nlist2}
+	\begin{tabular}{|c|c|}
+	    \hline 
+	    頂点番号& 隣接頂点\\ \hline
+	    1 & 3,6\\ \hline
+	    2 & 6\\ \hline
+	    3 & 1\\ \hline
+	    4 & 6\\ \hline
+	    5 & \\ \hline
+	    6 & 1,2,4 \\ \hline
+	\end{tabular}
+    \end{center}
+\end{table}
+
+
+
+
+
+
+
+
+
+
+
+

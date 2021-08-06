@@ -1,0 +1,37 @@
+Makefileの説明書．コマンドを忘れたとき用．
+OSは，mac, ubuntu, centosでは動く. 他は未確認だけど多分動く.
+
+OBJS = work 
+# ファイル名を指定. 
+# ファイル名によってここを書き換える．
+# ex) template.texというファイルを使っている場合は，OBJS = template
+
+覚えるコマンド
+A. texファイルからdviファイルを生成するコマンド
+platex $(OBJS).tex
+
+B. dviファイルからpdfファイルを生成するコマンド
+dvipdfmx $(OBJS).dvi
+
+この説明書では，AとBを合わせてコンパイルと呼ぶことにする．
+
+C. pdfを開くコマンド(OSによって，以下から選択)
+# mac
+open $(OBJS).pdf 
+# ubuntu, centos
+evince $(OBJS).pdf 
+
+入力コマンドとその説明
+make
+コンパイルする
+
+make open
+生成されたpdfを開く
+
+make total
+2回コンパイルしてから，pdfを開く
+(2回コンパイルしないと情報がうまく反映されない場合がある.)
+
+make clean
+コンパイル等により生成されたファイルを消すことで，ディレクトリの中を綺麗に保つ．
+
